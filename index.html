@@ -107,16 +107,25 @@
     overflow: hidden;
     pointer-events: none;
   }
-  .hero-video-wrap iframe {
+  .hero-video-wrap iframe,
+  #hero-yt-player,
+  #hero-yt-player iframe {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 177.78vh;  /* 16:9 ratio */
+    width: 177.78vh;
     height: 100vh;
     min-width: 100%;
-    min-height: 56.25vw; /* 16:9 ratio */
+    min-height: 56.25vw;
     border: none;
+    pointer-events: none;
+  }
+  #hero-yt-player {
+    width: 177.78vh;
+    height: 100vh;
+    min-width: 100%;
+    min-height: 56.25vw;
   }
 
   /* Dark overlay layers */
@@ -603,12 +612,7 @@
 
   <!-- YouTube background video — always shows latest upload -->
   <div class="hero-video-wrap">
-    <iframe
-      src="https://www.youtube.com/embed?listType=playlist&list=PL4BKuvDl-4fuISAoBoYFpkmCS1XhP768O&index=1&autoplay=1&mute=1&controls=0&loop=1&showinfo=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&iv_load_policy=3"
-      allow="autoplay; encrypted-media"
-      allowfullscreen
-      title="Brum Eats latest episode">
-    </iframe>
+    <div id="hero-yt-player"></div>
   </div>
 
   <!-- Grid overlay on top of video -->
@@ -772,8 +776,54 @@
   <div class="footer-copy">New episodes every Wednesday 16:00</div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<!-- YouTube IFrame API for reliable muted autoplay -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  var ytPlayer;
+  function onYouTubeIframeAPIReady() {
+    ytPlayer = new YT.Player('hero-yt-player', {
+      playerVars: {
+        listType: 'playlist',
+        list: 'PL4BKuvDl-4fuISAoBoYFpkmCS1XhP768O',
+        autoplay: 1,
+        mute: 1,
+        controls: 0,
+        loop: 1,
+        showinfo: 0,
+        rel: 0,
+        modestbranding: 1,
+        playsinline: 1,
+        disablekb: 1,
+        iv_load_policy: 3,
+        enablejsapi: 1,
+        fs: 0,
+      },
+      events: {
+        onReady: function(e) {
+          e.target.mute();
+          e.target.playVideo();
+        },
+        onStateChange: function(e) {
+          // If ended or paused, restart
+          if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
+            e.target.playVideo();
+          }
+        }
+      }
+    });
+  }
+</script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script>
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (ent
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>-e 
+</body>
+</html>

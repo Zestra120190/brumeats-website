@@ -753,10 +753,10 @@
       </div>
       <div class="link-arrow">&#x2197;</div>
     </a>
-    <a href="/cdn-cgi/l/email-protection#026a676e6e6d426070776f676376712c616d6f" class="link-card">
+    <a href="mailto:hello@brumeats.co.uk" class="link-card">
       <div>
         <div class="link-platform">Business</div>
-        <div class="link-handle"><span class="__cf_email__" data-cfemail="ed8588818182ad8f9f9880888c999ec38e8280">[email&#160;protected]</span></div>
+        <div class="link-handle">hello@brumeats.co.uk</div>
       </div>
       <div class="link-arrow">&#x2197;</div>
     </a>
@@ -767,7 +767,7 @@
   <p class="section-label" style="justify-content:center">Get in Touch</p>
   <h2 class="contact-title">BUSINESS ENQUIRIES?</h2>
   <p style="font-size:1rem;color:var(--white-muted);margin-bottom:24px;font-weight:300;">Sponsorships, collabs, or just want to say hello.</p>
-  <a href="/cdn-cgi/l/email-protection#78101d141417381a0a0d151d190c0b561b1715" class="contact-email"><span class="__cf_email__" data-cfemail="f59d9099999ab59787809890948186db969a98">[email&#160;protected]</span></a>
+  <a href="mailto:hello@brumeats.co.uk" class="contact-email">hello@brumeats.co.uk</a>
 </section>
 
 <footer>
@@ -776,26 +776,41 @@
   <div class="footer-copy">New episodes every Wednesday 16:00</div>
 </footer>
 
-<!-- YouTube IFrame API for reliable muted autoplay -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  var ytPlayer;
-  function onYouTubeIframeAPIReady() {
-    ytPlayer = new YT.Player('hero-yt-player', {
+  // -------------------------------------------------------
+  // Replace this URL once your Cloudflare Worker is deployed
+  // -------------------------------------------------------
+  const WORKER_URL = 'https://your-worker.your-subdomain.workers.dev';
+
+  async function getLatestVideoId() {
+    try {
+      const res = await fetch(WORKER_URL);
+      const data = await res.json();
+      return data.videoId || null;
+    } catch (e) {
+      console.warn('Could not fetch latest video ID:', e);
+      return null;
+    }
+  }
+
+  async function onYouTubeIframeAPIReady() {
+    const videoId = await getLatestVideoId();
+    if (!videoId) return; // silently skip if worker unreachable
+
+    new YT.Player('hero-yt-player', {
+      videoId: videoId,
       playerVars: {
-        listType: 'playlist',
-        list: 'PL4BKuvDl-4fuISAoBoYFpkmCS1XhP768O',
         autoplay: 1,
         mute: 1,
         controls: 0,
         loop: 1,
-        showinfo: 0,
+        playlist: videoId, // required for single-video loop
         rel: 0,
         modestbranding: 1,
         playsinline: 1,
         disablekb: 1,
         iv_load_policy: 3,
-        enablejsapi: 1,
         fs: 0,
       },
       events: {
@@ -804,7 +819,6 @@
           e.target.playVideo();
         },
         onStateChange: function(e) {
-          // If ended or paused, restart
           if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
             e.target.playVideo();
           }
@@ -813,7 +827,6 @@
     });
   }
 </script>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
@@ -824,6 +837,7 @@
     });
   }, { threshold: 0.1 });
   reveals.forEach(el => observer.observe(el));
-</script>-e 
+</script>
+
 </body>
 </html>

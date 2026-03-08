@@ -52,7 +52,7 @@
     justify-content: space-between;
     padding: 20px 40px;
     border-bottom: 1px solid rgba(0,229,200,0.1);
-    background: rgba(5,10,9,0.85);
+background: rgba(5,10,9,0.85);
     backdrop-filter: blur(12px);
   }
   .nav-logo {
@@ -87,8 +87,6 @@
     text-decoration: none;
   }
   .nav-cta:hover { background: var(--teal); color: var(--bg); }
-
-  /* HERO */
   .hero {
     min-height: 100vh;
     display: flex;
@@ -98,8 +96,6 @@
     position: relative;
     overflow: hidden;
   }
-
-  /* VIDEO BACKGROUND */
   .hero-video-wrap {
     position: absolute;
     inset: 0;
@@ -127,8 +123,6 @@
     min-width: 100%;
     min-height: 56.25vw;
   }
-
-  /* Dark overlay layers */
   .hero-video-wrap::after {
     content: '';
     position: absolute;
@@ -138,8 +132,6 @@
       linear-gradient(to top, rgba(5,10,9,0.8) 0%, transparent 40%);
     z-index: 1;
   }
-
-  /* Teal tint overlay */
   .hero-video-wrap::before {
     content: '';
     position: absolute;
@@ -147,8 +139,6 @@
     background: rgba(0, 229, 200, 0.04);
     z-index: 2;
   }
-
-  /* Grid overlay on top of video */
   .hero-grid-overlay {
     position: absolute;
     inset: 0;
@@ -159,13 +149,7 @@
     z-index: 3;
     pointer-events: none;
   }
-
-  /* Hero content sits above video */
-  .hero-content {
-    position: relative;
-    z-index: 4;
-  }
-
+  .hero-content { position: relative; z-index: 4; }
   .hero-eyebrow {
     font-family: 'DM Mono', monospace;
     font-size: 0.72rem;
@@ -234,8 +218,6 @@
     transition: all 0.2s;
   }
   .btn-secondary:hover { color: var(--white); border-color: var(--white-muted); }
-
-  /* Stats strip */
   .stats-strip {
     position: absolute;
     right: 40px;
@@ -266,8 +248,6 @@
     text-transform: uppercase;
     margin-top: 4px;
   }
-
-  /* Now playing badge */
   .now-playing {
     display: inline-flex;
     align-items: center;
@@ -292,7 +272,6 @@
     animation: blink 1.5s ease-in-out infinite;
   }
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-
   .scroll-hint {
     position: absolute;
     bottom: 32px;
@@ -315,8 +294,6 @@
     animation: pulse 2s ease-in-out infinite;
   }
   @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-
-  /* TICKER */
   .ticker-wrap {
     background: var(--teal);
     padding: 12px 0;
@@ -339,7 +316,6 @@
   }
   .ticker-sep { opacity: 0.4; }
   @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
   section { position: relative; z-index: 2; }
   .about {
     display: grid;
@@ -609,16 +585,10 @@
 </nav>
 
 <section class="hero">
-
-  <!-- YouTube background video — always shows latest upload -->
   <div class="hero-video-wrap">
     <div id="hero-yt-player"></div>
   </div>
-
-  <!-- Grid overlay on top of video -->
   <div class="hero-grid-overlay"></div>
-
-  <!-- All text content -->
   <div class="hero-content">
     <div class="now-playing">
       <div class="now-playing-dot"></div>
@@ -635,7 +605,6 @@
       <a href="#about" class="btn-secondary">Learn More</a>
     </div>
   </div>
-
   <div class="stats-strip">
     <div class="stat-item">
       <div class="stat-num">WED</div>
@@ -646,12 +615,10 @@
       <div class="stat-label">UK Time</div>
     </div>
   </div>
-
   <div class="scroll-hint">
     <div class="scroll-line"></div>
     Scroll to explore
   </div>
-
 </section>
 
 <div class="ticker-wrap">
@@ -778,65 +745,58 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  // -------------------------------------------------------
-  // Replace this URL once your Cloudflare Worker is deployed
-  // -------------------------------------------------------
   const WORKER_URL = 'https://damp-mud-1915-brumeats-wesbite-yt-player.j-cole1296.workers.dev';
 
-  async function getLatestVideoId() {
-    try {
-      const res = await fetch(WORKER_URL);
-      const data = await res.json();
-      return data.videoId || null;
-    } catch (e) {
-      console.warn('Could not fetch latest video ID:', e);
-      return null;
-    }
-  }
+  // Start fetching immediately — before the YouTube API is ready.
+  // This is critical for iOS Safari, which revokes autoplay permission
+  // if there's an async delay between the API being ready and the player being created.
+  var videoIdPromise = fetch(WORKER_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(d) { return d.videoId || null; })
+    .catch(function() { return null; });
 
-  async function onYouTubeIframeAPIReady() {
-    const videoId = await getLatestVideoId();
-    if (!videoId) return; // silently skip if worker unreachable
+  function onYouTubeIframeAPIReady() {
+    videoIdPromise.then(function(videoId) {
+      if (!videoId) return;
 
-    new YT.Player('hero-yt-player', {
-      videoId: videoId,
-      playerVars: {
-        autoplay: 1,
-        mute: 1,
-        controls: 0,
-        loop: 1,
-        playlist: videoId, // required for single-video loop
-        rel: 0,
-        modestbranding: 1,
-        playsinline: 1,
-        disablekb: 1,
-        iv_load_policy: 3,
-        fs: 0,
-      },
-      events: {
-        onReady: function(e) {
-          e.target.mute();
-          e.target.playVideo();
+      new YT.Player('hero-yt-player', {
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          mute: 1,
+          controls: 0,
+          loop: 1,
+          playlist: videoId,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          disablekb: 1,
+          iv_load_policy: 3,
+          fs: 0,
         },
-        onStateChange: function(e) {
-          if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
+        events: {
+          onReady: function(e) {
+            e.target.mute();
             e.target.playVideo();
+          },
+          onStateChange: function(e) {
+            if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
+              e.target.playVideo();
+            }
           }
         }
-      }
+      });
     });
   }
 </script>
 <script>
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
+  var reveals = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); }
     });
   }, { threshold: 0.1 });
-  reveals.forEach(el => observer.observe(el));
+  reveals.forEach(function(el) { observer.observe(el); });
 </script>
 
 </body>

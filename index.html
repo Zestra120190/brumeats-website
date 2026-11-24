@@ -13,6 +13,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://i.ytimg.com">
+<link rel="preconnect" href="https://www.youtube.com">
+<link rel="preconnect" href="https://damp-mud-1915-brumeats-wesbite-yt-player.j-cole1296.workers.dev" crossorigin>
 <style>
   :root {
     color-scheme: light dark;
@@ -34,6 +36,10 @@
     --radius-lg: 28px;
     --radius-md: 18px;
     --gutter: clamp(20px, 5vw, 48px);
+    /* viewport-fit=cover: keep content clear of the notch in landscape */
+    --pad-l: max(var(--gutter), env(safe-area-inset-left, 0px));
+    --pad-r: max(var(--gutter), env(safe-area-inset-right, 0px));
+    --safe-top: env(safe-area-inset-top, 0px);
     --max: 1080px;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
@@ -57,7 +63,7 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; scroll-padding-top: 64px; -webkit-text-size-adjust: 100%; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(64px + var(--safe-top)); -webkit-text-size-adjust: 100%; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -70,23 +76,35 @@
   img, svg { display: block; }
   [hidden] { display: none !important; }
   :focus-visible { outline: 3px solid var(--accent-bright); outline-offset: 3px; border-radius: 6px; }
-  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+  ::selection { background: color-mix(in srgb, var(--accent-bright) 28%, transparent); }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad-r) 0 var(--pad-l); }
+
+  /* Skip link: off-screen until a keyboard user tabs to it */
+  .skip-link {
+    position: fixed;
+    top: calc(8px + var(--safe-top));
+    left: var(--pad-l);
+    z-index: 200;
+    transform: translateY(calc(-100% - 24px - var(--safe-top)));
+  }
+  .skip-link:focus { transform: none; }
 
   /* ---------- Nav: translucent material, content scrolls beneath ---------- */
   .nav {
     position: fixed;
     inset: 0 0 auto 0;
     z-index: 100;
+    padding-top: var(--safe-top);
     background: var(--nav-bg);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
-    transition: box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease, background-color 0.3s ease;
   }
   .nav.scrolled { box-shadow: 0 1px 0 var(--hairline); }
   .nav-inner {
     max-width: var(--max);
     margin: 0 auto;
-    padding: 0 var(--gutter);
+    padding: 0 var(--pad-r) 0 var(--pad-l);
     height: 52px;
     display: flex;
     align-items: center;
@@ -126,13 +144,17 @@
     cursor: pointer;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
+  .menu-btn:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
   .menu-btn svg { transition: transform 0.35s var(--ease-out); }
   .menu-btn[aria-expanded="true"] svg { transform: rotate(90deg); }
   .menu-panel {
     display: none;
     list-style: none;
-    padding: 4px var(--gutter) 20px;
+    padding: 4px var(--pad-r) 20px var(--pad-l);
   }
   .menu-panel a {
     display: block;
@@ -163,7 +185,8 @@
   }
   .btn:active { transform: scale(0.97); }
   .btn-primary { background: var(--accent); color: var(--accent-text); }
-  .btn-primary:hover { opacity: 0.88; }
+  /* Hover pushes contrast up, not down: darker on light, lighter on dark */
+  .btn-primary:hover { background: color-mix(in srgb, var(--accent) 86%, var(--text)); }
   .btn-sm { min-height: 30px; padding: 0 14px; font-size: 0.8125rem; letter-spacing: 0; }
   .btn-sm:active { transform: scale(0.95); }
   .link-more {
@@ -190,30 +213,29 @@
     font-size: clamp(3rem, 9vw, 6rem);
     font-weight: 700;
     line-height: 1.02;
-    letter-spacing: -0.045em;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
   }
   .headline {
     font-size: clamp(2.25rem, 5.5vw, 3.75rem);
     font-weight: 700;
     line-height: 1.06;
     letter-spacing: -0.035em;
+    text-wrap: balance;
   }
   .lede {
     font-size: clamp(1.1875rem, 2.2vw, 1.5rem);
     line-height: 1.38;
     letter-spacing: -0.018em;
     color: var(--text-2);
+    text-wrap: pretty;
   }
-  .gradient-text {
-    background: linear-gradient(100deg, #00b39c 0%, #00e5c8 45%, #36b3ff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  /* Solid brand teal: the old gradient fell to 1.5:1 on the light background */
+  .accent-text { color: var(--accent); }
 
   /* ---------- Hero ---------- */
   .hero {
-    padding: calc(52px + clamp(56px, 10vw, 112px)) 0 0;
+    padding: calc(52px + var(--safe-top) + clamp(56px, 10vw, 112px)) 0 0;
     text-align: center;
   }
   .hero .lede { max-width: 34ch; margin: 22px auto 0; }
@@ -240,7 +262,7 @@
     background-size: cover;
     background-position: center;
     isolation: isolate;
-    box-shadow: 0 30px 80px -20px rgba(0, 40, 35, 0.35);
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.3);
   }
   #hero-yt-player, .player iframe {
     position: absolute;
@@ -308,6 +330,9 @@
     background: #00e5c8;
   }
   .player-controls { display: flex; gap: 8px; }
+  /* Play and sound buttons only appear once the player can act on them */
+  .player:not(.ready) .needs-player { display: none; }
+  .ext { flex-shrink: 0; }
   .player-fallback {
     position: absolute;
     inset: 0;
@@ -341,6 +366,7 @@
     letter-spacing: -0.03em;
     max-width: 22ch;
     color: var(--text-3);
+    text-wrap: balance;
   }
   .statement b { color: var(--text); font-weight: 600; }
   .about-body {
@@ -353,6 +379,7 @@
     line-height: 1.5;
     letter-spacing: -0.012em;
     color: var(--text-2);
+    text-wrap: pretty;
   }
 
   /* Feature tiles */
@@ -368,14 +395,10 @@
     padding: 32px 28px 36px;
     box-shadow: var(--shadow-tile);
   }
+  /* Bare line icon in flow: no rounded-square badge */
   .tile-icon {
-    width: 48px; height: 48px;
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-    background: color-mix(in srgb, var(--accent-bright) 14%, transparent);
     color: var(--accent);
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
   .tile h3 {
     font-size: 1.5rem;
@@ -384,7 +407,7 @@
     letter-spacing: -0.025em;
     margin-bottom: 10px;
   }
-  .tile p { color: var(--text-2); font-size: 1.0625rem; line-height: 1.47; }
+  .tile p { color: var(--text-2); font-size: 1.0625rem; line-height: 1.47; text-wrap: pretty; }
   #about { background: linear-gradient(var(--bg) 0%, var(--bg-alt) 40%); }
 
   /* Schedule: the one dark, cinematic moment */
@@ -404,10 +427,10 @@
   }
   .schedule .eyebrow { color: #00e5c8; }
   .schedule-time {
-    font-size: clamp(3.5rem, 10vw, 7.5rem);
+    font-size: clamp(3.5rem, 10vw, 6rem);
     font-weight: 700;
     line-height: 0.95;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.04em;
   }
   .schedule-time span { color: #00e5c8; }
   .schedule-sub { color: var(--feature-text-2); font-size: 1.1875rem; margin-top: 16px; letter-spacing: -0.012em; }
@@ -440,6 +463,7 @@
   .schedule.is-out .countdown, .schedule.is-out .countdown-label { display: none; }
   .schedule.is-out .out-now { display: block; }
   .schedule .btn-primary { background: #00e5c8; color: #00140f; }
+  .schedule .btn-primary:hover { background: color-mix(in srgb, #00e5c8 78%, #fff); }
 
   /* Follow: grouped inset list */
   #links { background: var(--bg-alt); padding-bottom: 0; }
@@ -521,7 +545,7 @@
     font-size: 0.75rem;
     letter-spacing: 0;
     line-height: 1.4;
-    color: var(--text-3);
+    color: var(--text-2); /* --text-3 was 3.3:1 at 12px */
   }
   footer .wrap {
     display: flex;
@@ -550,9 +574,22 @@
   @media (max-width: 734px) {
     .nav-links { display: none; }
     .menu-btn { display: inline-flex; }
-    .menu-panel { display: block; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s var(--ease-out), opacity 0.25s ease, padding 0.4s var(--ease-out); padding-top: 0; padding-bottom: 0; }
-    .nav.open .menu-panel { max-height: 320px; opacity: 1; padding-top: 4px; padding-bottom: 20px; }
-    .nav.open { box-shadow: 0 1px 0 var(--hairline), 0 20px 40px rgba(0,0,0,0.12); }
+    /* Sheet under the bar. visibility (delayed on close) takes the links out of the tab order */
+    .menu-panel {
+      display: block;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      box-shadow: 0 1px 0 var(--hairline), 0 20px 40px rgba(0,0,0,0.12);
+      opacity: 0;
+      transform: translateY(-8px);
+      visibility: hidden;
+      transition: opacity 0.25s ease, transform 0.4s var(--ease-out), visibility 0s linear 0.4s;
+    }
+    .nav.open { background: var(--bg); box-shadow: none; }
+    .nav.open .menu-panel { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
     .player { border-radius: var(--radius-md); }
     .player-ui { padding: 10px; }
     .player-ui > .glass { display: none; }
@@ -566,6 +603,7 @@
     .js .reveal { transform: none; transition: opacity 0.3s ease; }
     .btn:active, .glass:active { transform: none; opacity: 0.7; }
     .menu-btn svg { transition: none; }
+    .menu-panel { transform: none; }
   }
   @media (prefers-reduced-transparency: reduce) {
     .nav { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -580,10 +618,11 @@
 </head>
 <body>
 <script>document.documentElement.classList.add('js');</script>
+<a class="skip-link btn btn-primary btn-sm" href="#top">Skip to content</a>
 
 <header class="nav" id="nav">
   <div class="nav-inner">
-    <a href="#top" class="wordmark" aria-label="Brum Eats, back to top"><span class="wordmark-dot" aria-hidden="true"></span>Brum Eats</a>
+    <a href="#top" class="wordmark" aria-label="Brum Eats, back to top" translate="no"><span class="wordmark-dot" aria-hidden="true"></span>Brum Eats</a>
     <nav aria-label="Primary">
       <ul class="nav-links">
         <li><a href="#about">About</a></li>
@@ -611,7 +650,7 @@
   <section class="hero" aria-labelledby="hero-title">
     <div class="wrap">
       <p class="eyebrow reveal">Birmingham food courier · Vlog series</p>
-      <h1 class="display reveal" id="hero-title" style="--d:.06s">Real courier life.<br><span class="gradient-text">On two wheels.</span></h1>
+      <h1 class="display reveal" id="hero-title" style="--d:.06s">Real courier life.<br><span class="accent-text">On two wheels.</span></h1>
       <p class="lede reveal" style="--d:.12s">No fake motivation. Just a bloke, a bike, and Birmingham’s streets.</p>
       <div class="hero-actions reveal" style="--d:.18s">
         <a href="https://www.youtube.com/@brumeats?sub_confirmation=1" target="_blank" rel="noopener" class="btn btn-primary">Watch on YouTube</a>
@@ -626,16 +665,24 @@
           <div class="player-poster" id="player-poster"></div>
           <div class="player-fallback">
             <strong>New episode<br>every Friday.</strong>
-            <a href="https://www.youtube.com/@brumeats" target="_blank" rel="noopener" class="glass">Open the channel ↗</a>
+            <a href="https://www.youtube.com/@brumeats" target="_blank" rel="noopener" class="glass">Open the channel
+              <svg class="ext" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4"/></svg>
+            </a>
           </div>
           <div class="player-ui">
             <span class="glass" style="cursor:default" aria-hidden="true"><span class="live-dot" aria-hidden="true"></span>Latest episode</span>
             <div class="player-controls">
-              <button class="glass glass-icon" id="mute-btn" aria-label="Turn sound on" aria-pressed="false">
+              <button class="glass glass-icon needs-player" id="play-btn" type="button" aria-label="Pause video">
+                <svg id="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 5.5v13M15 5.5v13"/></svg>
+                <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M7.5 5v14l11-7z"/></svg>
+              </button>
+              <button class="glass glass-icon needs-player" id="mute-btn" type="button" aria-label="Turn sound on">
                 <svg id="icon-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
                 <svg id="icon-sound" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
               </button>
-              <a class="glass" id="watch-full" href="https://www.youtube.com/@brumeats" target="_blank" rel="noopener">Watch full episode ↗</a>
+              <a class="glass" id="watch-full" href="https://www.youtube.com/@brumeats" target="_blank" rel="noopener">Watch full episode
+                <svg class="ext" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4"/></svg>
+              </a>
             </div>
           </div>
         </div>
@@ -645,7 +692,7 @@
 
   <section id="about" aria-labelledby="about-title">
     <div class="wrap">
-      <p class="eyebrow reveal" id="about-title">About the show</p>
+      <h2 class="eyebrow reveal" id="about-title">About the show</h2>
       <p class="statement reveal" style="--d:.06s"><b>Hey, I’m Jack.</b> I deliver food around Birmingham on my bike — <b>rain, shine, or absolute chaos.</b></p>
       <div class="about-body reveal" style="--d:.12s">
         <p>Expect honest vlogs about life on the road: long waits, weird orders, near misses, and the odd brilliant moment that makes it all worth it.</p>
@@ -676,21 +723,21 @@
         </article>
       </div>
 
-      <div class="schedule reveal" id="watch">
+      <div class="schedule reveal" id="watch" role="region" aria-labelledby="watch-title">
         <div>
-          <p class="eyebrow">New episodes</p>
+          <h2 class="eyebrow" id="watch-title">New episodes</h2>
           <p class="schedule-time">Friday.<br><span>16:00.</span></p>
           <p class="schedule-sub">Every week, UK time. There’s always another ride, another story, and another shift waiting.</p>
         </div>
         <div>
           <p class="countdown-label">Next episode in</p>
-          <div class="countdown" id="countdown" aria-live="polite">
+          <div class="countdown" id="countdown">
             <div><b data-u="d">–</b><small>days</small></div>
             <div><b data-u="h">–</b><small>hours</small></div>
             <div><b data-u="m">–</b><small>mins</small></div>
           </div>
           <p class="out-now">New episode out now.</p>
-          <a href="https://www.youtube.com/@brumeats?sub_confirmation=1" target="_blank" rel="noopener" class="btn btn-primary">Jump on the handlebars</a>
+          <a href="https://www.youtube.com/@brumeats?sub_confirmation=1" target="_blank" rel="noopener" class="btn btn-primary">Subscribe on YouTube</a>
         </div>
       </div>
     </div>
@@ -705,22 +752,22 @@
       <ul class="list reveal" style="--d:.1s">
         <li><a href="https://www.youtube.com/@brumeats?sub_confirmation=1" target="_blank" rel="noopener">
           <span class="badge badge-yt" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 7.5v9l7-4.5z"/></svg></span>
-          <span class="list-text"><span class="list-title">YouTube</span><br><span class="list-sub">@BrumEats · Full episodes</span></span>
+          <span class="list-text"><span class="list-title">YouTube</span><br><span class="list-sub"><span translate="no">@BrumEats</span> · Full episodes</span></span>
           <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1 6 6-6 6"/></svg>
         </a></li>
         <li><a href="https://instagram.com/brumeatsjc" target="_blank" rel="noopener">
           <span class="badge badge-ig" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="0.6" fill="currentColor"/></svg></span>
-          <span class="list-text"><span class="list-title">Instagram</span><br><span class="list-sub">@BrumEatsJC</span></span>
+          <span class="list-text"><span class="list-title">Instagram</span><br><span class="list-sub" translate="no">@BrumEatsJC</span></span>
           <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1 6 6-6 6"/></svg>
         </a></li>
         <li><a href="https://tiktok.com/@brumeatsjc" target="_blank" rel="noopener">
           <span class="badge badge-tt" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 3c.3 2.3 1.8 3.9 4 4.1v3.1a7.2 7.2 0 0 1-3.9-1.2v6.3A5.6 5.6 0 1 1 11 9.8v3.2a2.4 2.4 0 1 0 2.3 2.4V3h3.3z"/></svg></span>
-          <span class="list-text"><span class="list-title">TikTok</span><br><span class="list-sub">@BrumEatsJC</span></span>
+          <span class="list-text"><span class="list-title">TikTok</span><br><span class="list-sub" translate="no">@BrumEatsJC</span></span>
           <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1 6 6-6 6"/></svg>
         </a></li>
         <li><a href="mailto:hello@brumeats.com">
           <span class="badge badge-mail" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg></span>
-          <span class="list-text"><span class="list-title">Email</span><br><span class="list-sub">hello@brumeats.com</span></span>
+          <span class="list-text"><span class="list-title">Email</span><br><span class="list-sub" translate="no">hello@brumeats.com</span></span>
           <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1 6 6-6 6"/></svg>
         </a></li>
       </ul>
@@ -732,8 +779,8 @@
       <h2 class="headline reveal" id="contact-title">Business enquiries.</h2>
       <p class="lede reveal" style="--d:.06s">Sponsorships, collabs, or just want to say hello.</p>
       <div class="email-row reveal" style="--d:.12s">
-        <a class="email-link" href="mailto:hello@brumeats.com">hello@brumeats.com</a>
-        <button class="btn btn-ghost btn-sm" id="copy-btn" type="button">Copy</button>
+        <a class="email-link" href="mailto:hello@brumeats.com" translate="no">hello@brumeats.com</a>
+        <button class="btn btn-ghost btn-sm" id="copy-btn" type="button">Copy email</button>
       </div>
       <p class="copy-status" id="copy-status" role="status"></p>
     </div>
@@ -742,16 +789,18 @@
 
 <footer>
   <div class="wrap">
-    <span>© <span id="year">2026</span> Brum Eats · Jack · Birmingham, UK</span>
+    <span>© <span id="year">2026</span> <span translate="no">Brum Eats</span> · Jack · Birmingham, UK</span>
     <span>New episodes every Friday, 16:00 UK time</span>
   </div>
 </footer>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
   const WORKER_URL = 'https://damp-mud-1915-brumeats-wesbite-yt-player.j-cole1296.workers.dev';
   var playerEl = document.getElementById('player');
   var ytPlayer = null;
+  // Reduced motion: show the still poster and wait for the play button
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var playing = !reduceMotion;
 
   // Start fetching immediately — before the YouTube API is ready.
   // This is critical for iOS Safari, which revokes autoplay permission
@@ -765,10 +814,21 @@
 
   videoIdPromise.then(function(videoId) {
     if (!videoId) { playerEl.classList.add('no-video'); return; }
-    // Poster first, so the tile looks finished while the player spins up
-    document.getElementById('player-poster').style.backgroundImage = 'url(https://i.ytimg.com/vi/' + videoId + '/maxresdefault.jpg)';
+    setPoster(videoId);
     document.getElementById('watch-full').href = 'https://www.youtube.com/watch?v=' + videoId;
   });
+
+  // Poster first, so the tile looks finished while the player spins up.
+  // Not every video has a maxres frame: YouTube answers with a 120x90 grey placeholder (or an error).
+  function setPoster(videoId) {
+    var poster = document.getElementById('player-poster');
+    var base = 'https://i.ytimg.com/vi/' + videoId + '/';
+    var img = new Image();
+    var use = function(src) { poster.style.backgroundImage = 'url(' + src + ')'; };
+    img.onload = function() { use(img.naturalWidth > 120 ? img.src : base + 'hqdefault.jpg'); };
+    img.onerror = function() { use(base + 'hqdefault.jpg'); };
+    img.src = base + 'maxresdefault.jpg';
+  }
 
   function onYouTubeIframeAPIReady() {
     videoIdPromise.then(function(videoId) {
@@ -777,7 +837,7 @@
       ytPlayer = new YT.Player('hero-yt-player', {
         videoId: videoId,
         playerVars: {
-          autoplay: 1,
+          autoplay: playing ? 1 : 0,
           mute: 1,
           controls: 0,
           loop: 1,
@@ -791,19 +851,41 @@
         },
         events: {
           onReady: function(e) {
+            // A silent preview: keep the frame out of the tab order and screen readers.
+            // The play, sound and "Watch full episode" controls stand in for it.
+            var frame = e.target.getIframe();
+            frame.title = 'Latest Brum Eats episode (preview)';
+            frame.setAttribute('tabindex', '-1');
+            frame.setAttribute('aria-hidden', 'true');
             e.target.mute();
-            e.target.playVideo();
+            if (playing) e.target.playVideo();
+            playerEl.classList.add('ready');
           },
           onStateChange: function(e) {
-            if (e.data === YT.PlayerState.PLAYING) { playerEl.classList.add('playing'); }
-            if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
-              e.target.playVideo();
-            }
+            if (e.data === YT.PlayerState.PLAYING) { playerEl.classList.add('playing'); setPlaying(true); }
+            if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
+            // Loop, unless someone paused it
+            if (e.data === YT.PlayerState.ENDED && playing) e.target.playVideo();
           }
         }
       });
     });
   }
+
+  // Play / pause
+  var playBtn = document.getElementById('play-btn');
+  function setPlaying(p) {
+    playing = p;
+    playBtn.setAttribute('aria-label', p ? 'Pause video' : 'Play video');
+    document.getElementById('icon-pause').hidden = !p;
+    document.getElementById('icon-play').hidden = p;
+  }
+  setPlaying(playing);
+  playBtn.addEventListener('click', function() {
+    if (!ytPlayer || !ytPlayer.pauseVideo) return;
+    if (playing) { ytPlayer.pauseVideo(); setPlaying(false); }
+    else { ytPlayer.playVideo(); setPlaying(true); }
+  });
 
   // Sound toggle
   var muteBtn = document.getElementById('mute-btn');
@@ -811,12 +893,13 @@
     if (!ytPlayer || !ytPlayer.isMuted) return;
     var turnOn = ytPlayer.isMuted();
     if (turnOn) { ytPlayer.unMute(); ytPlayer.setVolume(80); } else { ytPlayer.mute(); }
-    muteBtn.setAttribute('aria-pressed', String(turnOn));
     muteBtn.setAttribute('aria-label', turnOn ? 'Turn sound off' : 'Turn sound on');
     document.getElementById('icon-muted').hidden = turnOn;
     document.getElementById('icon-sound').hidden = !turnOn;
   });
 </script>
+<!-- async, and after the handler above is defined, so it no longer holds up the menu and countdown -->
+<script async src="https://www.youtube.com/iframe_api"></script>
 <script>
   // Nav: hairline appears only once content scrolls beneath it
   var nav = document.getElementById('nav');
@@ -835,7 +918,11 @@
   document.querySelectorAll('#menu-panel a').forEach(function(a) {
     a.addEventListener('click', function() { setMenu(false); });
   });
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') setMenu(false); });
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape' || !nav.classList.contains('open')) return;
+    setMenu(false);
+    menuBtn.focus(); // focus was possibly inside the sheet that is now hidden
+  });
 
   // Scroll reveal
   var reveals = document.querySelectorAll('.reveal');
